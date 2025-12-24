@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMS Master Development Scope</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #333;
+            --text-sub: #666;
+            --accent: #007bff;
+            --border-radius: 8px;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* --- DASHBOARD --- */
+        #dashboard-view { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 5px; color: #2c3e50; }
+        .subtitle { text-align: center; color: var(--text-sub); margin-bottom: 30px; font-size: 0.95em; }
+
+        .kanban-list {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            min-height: 500px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            border-left: 6px solid #ccc;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .card-title { font-weight: 700; font-size: 1.15em; margin-bottom: 8px; color: #2c3e50; }
+        .card-desc { font-size: 0.9em; color: var(--text-sub); line-height: 1.4; }
+        
+        .badge {
+            display: inline-block; padding: 4px 10px; border-radius: 12px; 
+            font-size: 0.75em; font-weight: bold; color: white; margin-top: 12px; text-transform: uppercase;
+        }
+
+        /* Category Colors */
+        .financial { border-left-color: #27ae60; } .financial .badge { background: #27ae60; }
+        .ops { border-left-color: #c0392b; } .ops .badge { background: #c0392b; }
+        .crm { border-left-color: #2980b9; } .crm .badge { background: #2980b9; }
+        .contract { border-left-color: #8e44ad; } .contract .badge { background: #8e44ad; }
+        .service { border-left-color: #f39c12; } .service .badge { background: #f39c12; }
+        .mobile { border-left-color: #d35400; } .mobile .badge { background: #d35400; }
+        .qc { border-left-color: #34495e; } .qc .badge { background: #34495e; }
+        .ux { border-left-color: #16a085; } .ux .badge { background: #16a085; }
+
+        .timer-badge {
+            position: absolute; right: 20px; top: 20px;
+            background: #e7f1ff; color: #007bff;
+            padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em;
+        }
+
+        /* --- DETAIL VIEW --- */
+        #detail-view {
+            display: none;
+            max-width: 900px; margin: 0 auto;
+            background: white; padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 2px solid #f1f1f1; padding-bottom: 20px; }
+        .back-btn { background: #f8f9fa; border: 1px solid #ddd; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; color: #555; transition: background 0.2s;}
+        .back-btn:hover { background: #e2e6ea; }
+        
+        .timer-input-group { text-align: right; }
+        .timer-input-group label { display: block; font-size: 0.75em; color: #888; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;}
+        .timer-input { font-size: 1.5em; border: none; border-bottom: 2px solid #007bff; text-align: right; width: 140px; font-weight: bold; color: #333; outline: none;}
+
+        .checklist-group { margin-bottom: 30px; }
+        .checklist-group h3 { 
+            border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; 
+            color: #2c3e50; font-size: 1.2em; 
+        }
+        
+        /* Bullet Point Styling */
+        .task-list { list-style-type: none; padding: 0; }
+        .task-item { 
+            display: flex; align-items: flex-start; margin-bottom: 15px; 
+            background: #fdfdfd; padding: 10px; border-radius: 6px; border: 1px solid #f0f0f0;
+        }
+        .task-bullet { 
+            color: #007bff; font-size: 1.2em; margin-right: 12px; line-height: 1; 
+        }
+        .task-content { font-size: 1em; line-height: 1.6; color: #444; width: 100%; }
+        .task-content strong { color: #222; }
+
+        .code-snippet { 
+            background: #282c34; color: #abb2bf; padding: 15px; border-radius: 5px; 
+            font-family: 'Consolas', 'Monaco', monospace; font-size: 0.85em; 
+            display: block; margin-top: 10px; white-space: pre-wrap; overflow-x: auto;
+        }
+        
+        .sub-list {
+            list-style-type: disc; margin-left: 20px; margin-top: 5px; color: #555;
+        }
+        .sub-list li { margin-bottom: 5px; }
+
+    </style>
+</head>
+<body>
+
+    <div id="dashboard-view">
+        <h1>MMS Development Board</h1>
+        <p class="subtitle">Drag cards to prioritize. Click to view detailed scope & set time estimates.</p>
+        <div class="kanban-list" id="cardContainer"></div>
+    </div>
+
+    <div id="detail-view">
+        <button class="back-btn" onclick="showDashboard()">← Back to Board</button>
+        <div class="header-row">
+            <div style="flex:1; padding-right: 20px;">
+                <h2 id="detailTitle" style="margin: 10px 0 5px 0;">Module Name</h2>
+                <div id="detailDesc" style="color: #666;">Module Description</div>
+            </div>
+            <div class="timer-input-group">
+                <label>Est. Time</label>
+                <input type="text" id="timeInput" class="timer-input" placeholder="Enter it here">
+            </div>
+        </div>
+        <div id="detailContent"></div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const modules = [
+            {
+                id: "financial",
+                title: "1. Financial, Loyalty & Payment",
+                type: "financial",
+                desc: "Dibsy Gateway, Subscription Loyalty, Debt Management.",
+                groups: [
+                    {
+                        name: "Payment Gateway Switch (Dibsy)",
+                        items: [
+                            `<strong>Switch:</strong> Redirection must change from Fatoora to <strong>Dibsy</strong>.`,
+                            `<strong>Metadata Integration:</strong> The system must pass the following JSON fields to Dibsy to ensure transactions are trackable:
+<div class="code-snippet">{
+  "amount": { "currency": "QAR", "value": "100.00" },
+  "metadata": {
+    "erp_invoice_id": "",
+    "erp_order_id": "",
+    "customer_name": "",
+    "customer_phone": "",
+    "service_rendered": "",
+    "spare_parts_cost": "",
+    "discount": ""
+  }
+}</div>`,
+                            `<strong>"Failed-but-Collected" Verification:</strong> Developers must verify and test the specific API hook in the Sandbox environment to ensure the system automatically updates payment status if money is deducted despite a "Failed" transaction status (do not build a new listener, just verify existing capability).`
+                        ]
+                    },
+                    {
+                        name: "New Loyalty Logic (Subscription Model)",
+                        items: [
+                            `<strong>Model:</strong> Replace "Total Paid" logic with a <strong>Yearly Paid Subscription</strong> system.`,
+                            `<strong>Tiers & Perks:</strong>
+                             <ul class="sub-list">
+                                <li><strong>Bronze (399 QAR/Yr):</strong> 10% Discount. No Priority Response. Avios: 20 QAR = 1 Point.</li>
+                                <li><strong>Silver (599 QAR/Yr):</strong> 15% Discount. Response: 24-48 HR. Avios: 15 QAR = 1 Point. Includes Electrical/Plumbing coverage.</li>
+                                <li><strong>Gold (999 QAR/Yr):</strong> 15% Discount. Response: <24 HR. Avios: 10 QAR = 1 Point. Includes Ticket Draw Token.</li>
+                             </ul>`,
+                            `<strong>Automation:</strong> The system must auto-apply these discounts and response time flags to orders.`
+                        ]
+                    },
+                    {
+                        name: "Debt & Collection Management",
+                        items: [
+                            `<strong>Pending Payment Page:</strong> A dedicated card view for each customer showing total balance and payment history.`,
+                            `<strong>Communication Log:</strong> A specific note section for agents to record details of collection calls.`,
+                            `<strong>"PayLater":</strong> Integration of installment payment options.`
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "ops",
+                title: "2. Operations, Teams & Division Logic",
+                type: "ops",
+                desc: "Drag & Drop, Emergency Teams, Division Rules.",
+                groups: [
+                    {
+                        name: "Drag & Drop Team Management",
+                        items: [
+                            `<strong>Container Logic:</strong> Create zones for Free (C1), Vacation (C2), Other Work (C3), and Active Teams (C4).`,
+                            `<strong>Card Visuals:</strong> Cards must display Employee Photo, Name, and specific <strong>Job Description</strong> (Driver, Technician, or Helper).`
+                        ]
+                    },
+                    {
+                        name: "Emergency Team Module",
+                        items: [
+                            `<strong>Migration:</strong> Move emergency operations from Google Sheets/Apps Script to MMS.`,
+                            `<strong>Access Control:</strong> Emergency teams must see <strong>ONLY</strong> their own orders (no access to the general schedule).`,
+                            `<strong>Pricing:</strong> The system must auto-apply a percentage price increase for emergency orders.`
+                        ]
+                    },
+                    {
+                        name: "Scheduling & Division Logic",
+                        items: [
+                            `<strong>Multi-Day Orders:</strong> Enable scheduling a single order across multiple days/slots without closing the order early.`,
+                            `<strong>Kitchen Division:</strong> The Manager (Omar) must be restricted to viewing only Kitchen teams/orders. Logic must be added for a <strong>20% Markup</strong> on resold items.`,
+                            `<strong>RSH Brand:</strong> Separate invoicing and branding logic is required for "RSH" orders, even if they are mixed with Alfetri services.`
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "crm",
+                title: "3. Unified Call Center (CRM)",
+                type: "crm",
+                desc: "Unified Thread View, Automation Protocols.",
+                groups: [
+                    {
+                        name: "Unified Dashboard",
+                        items: [
+                            `<strong>Thread View:</strong> Merge <strong>3CX</strong> (Calls), <strong>Wati</strong> (WhatsApp API), and <strong>Standard Mobile WhatsApp</strong> into a single view.`,
+                            `<strong>Instant Profile:</strong> Agents must see Name, Loyalty Tier, Last Service, and MEP Construction history immediately upon contact.`,
+                            `<strong>Direct Actions:</strong> Ability to create an Order, Quotation, or "Back Work" directly from the chat page.`
+                        ]
+                    },
+                    {
+                        name: "Automation Protocols",
+                        items: [
+                            `<strong>Pre-Response Flow:</strong> A Wati flow to gather customer info before the agent connects.`,
+                            `<strong>No-Answer Protocol:</strong> An automated notification workflow covering 7 specific cases if the team arrives and the customer doesn't answer.`,
+                            `<strong>Safety Interlock:</strong> Ensure an order cannot be cancelled if the team has already started work.`
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "contracts",
+                title: "4. Contracts & Quotation Module",
+                type: "contract",
+                desc: "Site Visits, Recurring Contracts, Renewals.",
+                groups: [
+                    {
+                        name: "Site Visit Logic",
+                        items: [
+                            `<strong>Visit Types:</strong> Split visits into <strong>Service Request</strong> (One-off, payable immediately) vs <strong>Contract Request</strong> (Recurring).`,
+                            `<strong>Condition Rating:</strong> Technicians must rate items (Excellent/Good/Bad) and Brand Reliability (Reliable/Non-Reliable), which dynamically affects the final quote price.`
+                        ]
+                    },
+                    {
+                        name: "Quotation Builder",
+                        items: [
+                            `<strong>Hierarchy:</strong> Mapping logic for Building → Unit → Room.`,
+                            `<strong>SLA Terms:</strong> Define Response Time and Resolution Time in the quote.`,
+                            `<strong>Workflow:</strong> Draft → Waiting → Approved → Sent → Need Mods (Rejected quotes cannot be edited directly).`
+                        ]
+                    },
+                    {
+                        name: "Active Contracts",
+                        items: [
+                            `<strong>Auto-Scheduling:</strong> Active contract visits must be <strong>auto-added to the Team Calendar</strong> immediately.`,
+                            `<strong>Emergency Overages:</strong> Track the "Free Emergency Calls" limit; once exceeded, the system must <strong>auto-charge</strong> for visits based on contract rates.`,
+                            `<strong>Renewals:</strong> Auto-send a WhatsApp reminder (via Wati) 15 days before expiration.`
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "service",
+                title: "5. Service Data & Inventory",
+                type: "service",
+                desc: "Service Tree, Nested Inventory, Smart Reminders.",
+                groups: [
+                    {
+                        name: "Service Hierarchy Tree",
+                        items: [
+                            `<strong>Structure:</strong> Category (e.g., Central Water) → Components (Heater/Pump) → Options (Brand).`,
+                            `<strong>Pricing:</strong> Final Price = Base Price + Component A Price + Component B Price.`
+                        ]
+                    },
+                    {
+                        name: "Inventory UI",
+                        items: [
+                            `<strong>Group Structure:</strong> Must be nested: <strong>Group → Item → Brand</strong>.`,
+                            `<strong>Visuals:</strong> Drag and drop functionality for organizing items into groups.`
+                        ]
+                    },
+                    {
+                        name: "Smart Reminders",
+                        items: [
+                            `<strong>Consolidated Page:</strong> A single page to view and manage all reminders.`,
+                            `<strong>Template Logic:</strong> <strong>One</strong> general text template. Specific service details (Service A, B, C) are inserted dynamically into the <strong>Image</strong>.`,
+                            `<strong>Batching:</strong> If multiple reminders are due (e.g., Today + 10 Days), the system must send <strong>one</strong> combined message.`
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "mobile",
+                title: "6. Mobile App (Native)",
+                type: "mobile",
+                desc: "Customer App, Payments, Data Rules.",
+                groups: [
+                    {
+                        name: "Core User Features",
+                        items: [
+                            `<strong>Login:</strong> Via Mobile Number.`,
+                            `<strong>Booking:</strong> Fast-book "Favorites" and select time slots based on real-time team availability.`,
+                            `<strong>Media:</strong> Ability to attach Audio, Video, or Images to orders.`
+                        ]
+                    },
+                    {
+                        name: "Payments & Logic",
+                        items: [
+                            `<strong>Integration:</strong> Apple Pay and Google Pay support.`,
+                            `<strong>Deposits:</strong> Pre-payment or deposit required to prevent last-minute cancellations.`,
+                            `<strong>Early Bird:</strong> Discounts for booking N days in advance.`
+                        ]
+                    },
+                    {
+                        name: "Data Rules",
+                        items: [
+                            `<strong>Edit Restriction:</strong> Active app orders can be viewed by the Call Center but must be <strong>edited only via the Mobile App</strong> to prevent data conflicts.`
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "qc",
+                title: "7. Field Quality & Knowledge Base",
+                type: "qc",
+                desc: "QC Tracking, SOPs, Error Codes.",
+                groups: [
+                    {
+                        name: "QC & Tracking",
+                        items: [
+                            `<strong>Track Card:</strong> View live team location and track duration "Inside House" vs "Buying Supplies".`,
+                            `<strong>Random Check Module:</strong> Auto-assign QC staff to inspect orders. Low team scores trigger a <strong>higher frequency</strong> of future checks.`
+                        ]
+                    },
+                    {
+                        name: "Technician Support",
+                        items: [
+                            `<strong>SOP Access:</strong> Searchable Procedure Guides (e.g., Tank Cleaning steps).`,
+                            `<strong>AC Error Codes:</strong> A search engine (Brand → Code → Definition). <strong>Note:</strong> No dataset exists; it must be built manually.`,
+                            `<strong>Watermark:</strong> Photos must include a time/location watermark.`,
+                            `<strong>Spot Invoicing:</strong> Create "Back Work" invoices immediately on-site if new issues are found.`
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "ux",
+                title: "8. UX & Reporting Enhancements",
+                type: "ux",
+                desc: "Invoicing, Filters, Education.",
+                groups: [
+                    {
+                        name: "General Improvements",
+                        items: [
+                            `<strong>Invoice Location:</strong> If "Blue Plate" data exists → Print on invoice. If NO Blue Plate → Insert a Google Maps screenshot into the placeholder.`,
+                            `<strong>Filter Persistence:</strong> Filters must remain active when navigating in and out of Order/Invoice lists.`,
+                            `<strong>Educational Content:</strong> Auto-send PDF guides (e.g., "Preparation for Install") upon booking.`
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // --- APP LOGIC ---
+        const dashboard = document.getElementById('dashboard-view');
+        const detailView = document.getElementById('detail-view');
+        const container = document.getElementById('cardContainer');
+        const timeInput = document.getElementById('timeInput');
+        let currentId = null;
+
+        function init() {
+            renderBoard();
+            setupDrag();
+        }
+
+        function renderBoard() {
+            container.innerHTML = '';
+            let order = JSON.parse(localStorage.getItem('mms_plan_order'));
+            if (!order) order = modules.map(m => m.id);
+
+            order.forEach(id => {
+                const mod = modules.find(m => m.id === id);
+                if (mod) createCard(mod);
+            });
+        }
+
+        function createCard(mod) {
+            const savedTime = localStorage.getItem(`mms_time_${mod.id}`) || '';
+            const el = document.createElement('div');
+            el.className = `card ${mod.type}`;
+            el.draggable = true;
+            el.dataset.id = mod.id;
+            el.onclick = () => openDetail(mod);
+            el.innerHTML = `
+                ${savedTime ? `<div class="timer-badge">⏱ ${savedTime}</div>` : ''}
+                <div class="card-title">${mod.title}</div>
+                <div class="card-desc">${mod.desc}</div>
+                <span class="badge">${mod.type.toUpperCase()}</span>
+            `;
+            container.appendChild(el);
+        }
+
+        function openDetail(mod) {
+            currentId = mod.id;
+            document.getElementById('detailTitle').innerText = mod.title;
+            document.getElementById('detailDesc').innerText = mod.desc;
+            timeInput.value = localStorage.getItem(`mms_time_${mod.id}`) || '';
+
+            const content = document.getElementById('detailContent');
+            content.innerHTML = '';
+
+            mod.groups.forEach(group => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'checklist-group';
+                groupDiv.innerHTML = `<h3>${group.name}</h3>`;
+                
+                const ul = document.createElement('ul');
+                ul.className = 'task-list';
+                
+                group.items.forEach(itemHtml => {
+                    const li = document.createElement('li');
+                    li.className = 'task-item';
+                    li.innerHTML = `
+                        <div class="task-bullet">•</div>
+                        <div class="task-content">${itemHtml}</div>
+                    `;
+                    ul.appendChild(li);
+                });
+                
+                groupDiv.appendChild(ul);
+                content.appendChild(groupDiv);
+            });
+
+            dashboard.style.display = 'none';
+            detailView.style.display = 'block';
+            window.scrollTo(0,0);
+        }
+
+        function showDashboard() {
+            detailView.style.display = 'none';
+            dashboard.style.display = 'block';
+            renderBoard();
+            setupDrag();
+        }
+
+        timeInput.addEventListener('input', (e) => {
+            if (currentId) localStorage.setItem(`mms_time_${currentId}`, e.target.value);
+        });
+
+        function setupDrag() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.addEventListener('dragstart', () => card.classList.add('dragging'));
+                card.addEventListener('dragend', () => {
+                    card.classList.remove('dragging');
+                    saveOrder();
+                });
+            });
+
+            container.addEventListener('dragover', e => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(container, e.clientY);
+                const draggable = document.querySelector('.dragging');
+                if (afterElement == null) {
+                    container.appendChild(draggable);
+                } else {
+                    container.insertBefore(draggable, afterElement);
+                }
+            });
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function saveOrder() {
+            const ids = [...document.querySelectorAll('.card')].map(c => c.dataset.id);
+            localStorage.setItem('mms_plan_order', JSON.stringify(ids));
+        }
+
+        init();
+    </script>
+</body>
+</html>
